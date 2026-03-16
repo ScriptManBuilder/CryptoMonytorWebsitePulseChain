@@ -1,10 +1,10 @@
 import styled, { keyframes } from 'styled-components';
 import { devices } from './common.styles';
 
-const shimmer = keyframes`
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-`;
+// const shimmer = keyframes`
+//   0% { background-position: -200% 0; }
+//   100% { background-position: 200% 0; }
+// `;
 
 export const WatchlistContainer = styled.div`
   display: grid;
