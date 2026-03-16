@@ -1,8 +1,7 @@
 import axios from 'axios';
 import type { CoinMarketData } from '../types/crypto';
 
-// Use proxy to avoid CORS issues
-const COINGECKO_BASE_URL = '/api';
+const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
 const api = axios.create({
   baseURL: COINGECKO_BASE_URL,
