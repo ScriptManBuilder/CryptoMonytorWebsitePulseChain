@@ -46,18 +46,28 @@ export const isInWatchlist = (coinId: string): boolean => {
 export const getAlerts = (): PriceAlert[] => {
   try {
     const data = localStorage.getItem(ALERTS_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    const alerts: PriceAlert[] = JSON.parse(data);
+    // Migrate old alerts that don't have the new fields
+    return alerts.map((a) => ({
+      ...a,
+      coinSymbol: a.coinSymbol || '',
+      alertType: a.alertType || 'price',
+      isRecurring: a.isRecurring ?? false,
+      triggeredCount: a.triggeredCount ?? 0,
+    }));
   } catch {
     return [];
   }
 };
 
-export const addAlert = (alert: Omit<PriceAlert, 'id' | 'createdAt'>): PriceAlert[] => {
+export const addAlert = (alert: Omit<PriceAlert, 'id' | 'createdAt' | 'triggeredCount'>): PriceAlert[] => {
   const alerts = getAlerts();
   const newAlert: PriceAlert = {
     ...alert,
     id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     createdAt: Date.now(),
+    triggeredCount: 0,
   };
   const updated = [...alerts, newAlert];
   localStorage.setItem(ALERTS_KEY, JSON.stringify(updated));
@@ -74,8 +84,35 @@ export const removeAlert = (alertId: string): PriceAlert[] => {
 export const deactivateAlert = (alertId: string): PriceAlert[] => {
   const alerts = getAlerts();
   const updated = alerts.map((a) =>
-    a.id === alertId ? { ...a, isActive: false } : a
+    a.id === alertId
+      ? { ...a, isActive: false, triggeredAt: Date.now(), triggeredCount: (a.triggeredCount || 0) + 1 }
+      : a
   );
+  localStorage.setItem(ALERTS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const toggleAlert = (alertId: string): PriceAlert[] => {
+  const alerts = getAlerts();
+  const updated = alerts.map((a) =>
+    a.id === alertId ? { ...a, isActive: !a.isActive } : a
+  );
+  localStorage.setItem(ALERTS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const reactivateRecurringAlert = (alertId: string): PriceAlert[] => {
+  const alerts = getAlerts();
+  const updated = alerts.map((a) =>
+    a.id === alertId ? { ...a, isActive: true } : a
+  );
+  localStorage.setItem(ALERTS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const clearTriggeredAlerts = (): PriceAlert[] => {
+  const alerts = getAlerts();
+  const updated = alerts.filter((a) => a.isActive);
   localStorage.setItem(ALERTS_KEY, JSON.stringify(updated));
   return updated;
 };

@@ -39,14 +39,29 @@ export interface WatchlistItem {
   addedAt: number;
 }
 
+export type AlertType = 'price' | 'percentage_change';
+export type AlertCondition = 'above' | 'below';
+export type AlertTimeframe = '1h' | '24h' | '7d';
+
 export interface PriceAlert {
   id: string;
   coinId: string;
   coinName: string;
+  coinSymbol: string;
+  alertType: AlertType;
+  // For price alerts
   targetPrice: number;
-  condition: 'above' | 'below';
+  condition: AlertCondition;
+  // For percentage change alerts
+  percentageChange?: number;
+  timeframe?: AlertTimeframe;
+  // Common fields
   isActive: boolean;
+  isRecurring: boolean;
+  note?: string;
   createdAt: number;
+  triggeredAt?: number;
+  triggeredCount: number;
 }
 
 export interface SparklineDataPoint {

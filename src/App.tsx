@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
 import type { CoinMarketData, SortConfig, SortField } from './types/crypto';
 import { useCryptoData } from './hooks/useCryptoData';
@@ -10,11 +10,15 @@ import MobileCryptoCard from './components/MobileCryptoCard';
 import SearchFilters from './components/SearchFilters';
 import WatchlistView from './components/WatchlistView';
 import AlertsView from './components/AlertsView';
+import ProfileAuth from './components/ProfileAuth';
 import {
   GlobalStyles,
   Container,
   Header,
+  HeaderLeft,
+  HeaderRight,
   Logo,
+  LogoIcon,
   LastUpdated,
   TabContainer,
   Tab,
@@ -31,6 +35,7 @@ import {
 import {
   FilterStats,
   StatItem,
+  StatIcon,
   StatLabel,
   StatValue,
 } from './styles/filters.styles';
@@ -56,15 +61,45 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabType>('market');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceFilter, setPriceFilter] = useState('all');
-  const [itemsPerPage, setItemsPerPage] = useState(30);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [refreshInterval, setRefreshInterval] = useState(120000); // 2 min default
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'market_cap_rank',
     direction: 'asc',
   });
 
-  const { coins, loading, error, refetch, lastUpdated } = useCryptoData(300000);
+  const { coins, loading, error, refetch, lastUpdated } = useCryptoData(refreshInterval);
   const { watchlist, addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
-  const { alerts, addAlert, removeAlert, notificationsEnabled, enableNotifications } = useAlerts();
+  const {
+    alerts,
+    activeAlerts,
+    triggeredAlerts,
+    addAlert,
+    removeAlert,
+    toggleAlert,
+    clearTriggered,
+    notificationsEnabled,
+    enableNotifications,
+    checkAlerts,
+    recentlyTriggered,
+  } = useAlerts();
+
+  // Check price alerts whenever coin data refreshes
+  useEffect(() => {
+    if (coins.length > 0 && notificationsEnabled) {
+      checkAlerts(coins);
+    }
+  }, [coins, notificationsEnabled, checkAlerts]);
+
+  const getRefreshIntervalLabel = () => {
+    switch (refreshInterval) {
+      case 60000: return '1 min';
+      case 120000: return '2 min';
+      case 300000: return '5 min';
+      case 600000: return '10 min';
+      default: return '2 min';
+    }
+  };
 
   const handleSort = (field: SortField) => {
     setSortConfig((prev) => ({
@@ -88,7 +123,8 @@ function App() {
   const handleResetFilters = () => {
     setSearchQuery('');
     setPriceFilter('all');
-    setItemsPerPage(30);
+    setItemsPerPage(25);
+    setRefreshInterval(120000); // 2 min
     setSortConfig({
       field: 'market_cap_rank',
       direction: 'asc',
@@ -159,18 +195,24 @@ function App() {
   return (
     <>
       <GlobalStyles />
-      <Container>
-        <Header>
+      <Header>
+        <HeaderLeft>
           <Logo>
-            <span>📊</span> Crypto Pulse Dashboard
+            <LogoIcon>⚡</LogoIcon>
+            Crypto Pulse
           </Logo>
+        </HeaderLeft>
+        <HeaderRight>
           {lastUpdated && (
             <LastUpdated>
-              🕐 Updates every 5 min · Last: {formatDate(lastUpdated)}
+              Updates every {getRefreshIntervalLabel()} · {formatDate(lastUpdated)}
             </LastUpdated>
           )}
-        </Header>
+          <ProfileAuth />
+        </HeaderRight>
+      </Header>
 
+      <Container>
         <TabContainer>
           <Tab $active={activeTab === 'market'} onClick={() => setActiveTab('market')}>
             📈 Market
@@ -179,7 +221,7 @@ function App() {
             ⭐ Watchlist ({watchlist.length})
           </Tab>
           <Tab $active={activeTab === 'alerts'} onClick={() => setActiveTab('alerts')}>
-            🔔 Alerts ({alerts.filter((a) => a.isActive).length})
+            🔔 Alerts ({activeAlerts.length})
           </Tab>
         </TabContainer>
 
@@ -187,14 +229,17 @@ function App() {
           <>
             <FilterStats>
               <StatItem>
+                <StatIcon $color="rgba(124, 58, 237, 0.15)">🪙</StatIcon>
                 <StatLabel>Total Coins</StatLabel>
                 <StatValue>{filteredAndSortedCoins.length}</StatValue>
               </StatItem>
               <StatItem>
+                <StatIcon $color="rgba(0, 212, 255, 0.15)">💎</StatIcon>
                 <StatLabel>Total Market Cap</StatLabel>
                 <StatValue>{formatLargeNumber(totalMarketCap)}</StatValue>
               </StatItem>
               <StatItem>
+                <StatIcon $color="rgba(244, 114, 182, 0.15)">📊</StatIcon>
                 <StatLabel>24h Volume</StatLabel>
                 <StatValue>{formatLargeNumber(totalVolume)}</StatValue>
               </StatItem>
@@ -218,9 +263,21 @@ function App() {
                 >
                   <option value={5}>5 coins</option>
                   <option value={10}>10 coins</option>
-                  <option value={30}>30 coins</option>
+                  <option value={25}>25 coins</option>
                   <option value={50}>50 coins</option>
                   <option value={100}>100 coins</option>
+                </ItemsPerPageSelect>
+              </ShowItemsGroup>
+              <ShowItemsGroup>
+                <ItemsPerPageLabel>Refresh:</ItemsPerPageLabel>
+                <ItemsPerPageSelect 
+                  value={refreshInterval} 
+                  onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                >
+                  <option value={60000}>1 min</option>
+                  <option value={120000}>2 min</option>
+                  <option value={300000}>5 min</option>
+                  <option value={600000}>10 min</option>
                 </ItemsPerPageSelect>
               </ShowItemsGroup>
               <ResetButton onClick={handleResetFilters}>
@@ -280,11 +337,16 @@ function App() {
         {activeTab === 'alerts' && (
           <AlertsView
             alerts={alerts}
+            activeAlerts={activeAlerts}
+            triggeredAlerts={triggeredAlerts}
             coins={coins}
             onAddAlert={addAlert}
             onRemoveAlert={removeAlert}
+            onToggleAlert={toggleAlert}
+            onClearTriggered={clearTriggered}
             notificationsEnabled={notificationsEnabled}
             onEnableNotifications={enableNotifications}
+            recentlyTriggered={recentlyTriggered}
           />
         )}
       </Container>

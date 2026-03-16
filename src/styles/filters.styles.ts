@@ -1,51 +1,51 @@
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { devices } from './common.styles';
 
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
 
 
 export const FilterContainer = styled.div`
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 12px;
-  margin-bottom: 20px;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  margin-bottom: 16px;
   align-items: center;
 
   @media ${devices.tablet} {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-
-  @media ${devices.mobileL} {
-    gap: 10px;
-  }
 `;
 
 export const SearchInput = styled.input`
   width: 100%;
-  padding: 14px 20px;
-  padding-left: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 13px 20px;
+  padding-left: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   outline: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &::placeholder {
-    color: #64748b;
+    color: #475569;
   }
 
   &:focus {
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
-    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(124, 58, 237, 0.5);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1), 0 0 20px rgba(124, 58, 237, 0.05);
+    background: rgba(255, 255, 255, 0.05);
   }
 
   @media ${devices.mobileL} {
-    padding: 12px 18px;
-    padding-left: 46px;
-    font-size: 0.9rem;
+    padding: 11px 18px;
+    padding-left: 44px;
+    font-size: 0.85rem;
   }
 `;
 
@@ -136,12 +136,12 @@ export const FilterActions = styled.div`
 `;
 
 export const RefreshButton = styled.button`
-  padding: 14px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 13px 24px;
+  border: 1px solid rgba(124, 58, 237, 0.25);
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
-  color: #fff;
-  font-size: 0.95rem;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(99, 102, 241, 0.06) 100%);
+  color: #c4b5fd;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -152,10 +152,11 @@ export const RefreshButton = styled.button`
   white-space: nowrap;
 
   &:hover {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(99, 102, 241, 0.15) 100%);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.22) 0%, rgba(99, 102, 241, 0.12) 100%);
     border-color: rgba(124, 58, 237, 0.5);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.25);
+    color: #fff;
   }
 
   &:active {
@@ -163,27 +164,40 @@ export const RefreshButton = styled.button`
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
     transform: none;
   }
 
   @media ${devices.mobileL} {
-    padding: 12px 18px;
-    font-size: 0.9rem;
+    padding: 11px 18px;
+    font-size: 0.85rem;
   }
 `;
 
 export const FilterStats = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 24px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  gap: 16px;
   margin-bottom: 24px;
+  position: relative;
+
+  @media ${devices.tablet} {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+`;
+
+export const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border-radius: 18px;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 
@@ -194,60 +208,75 @@ export const FilterStats = styled.div`
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, #00d4ff 20%, #7c3aed 50%, #f472b6 80%, transparent);
+    background: linear-gradient(90deg, #7c3aed, #00d4ff, #f472b6);
+    background-size: 200% 100%;
+    animation: ${shimmer} 3s linear infinite;
   }
 
-  @media ${devices.tablet} {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 20px;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(20px, -20px);
+    pointer-events: none;
+  }
+
+  &:hover {
+    background: rgba(124, 58, 237, 0.06);
+    border-color: rgba(124, 58, 237, 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(124, 58, 237, 0.15);
+  }
+
+  &:nth-child(2)::after {
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+  }
+
+  &:nth-child(3)::after {
+    background: radial-gradient(circle, rgba(244, 114, 182, 0.08) 0%, transparent 70%);
   }
 
   @media ${devices.mobileL} {
-    padding: 16px;
+    padding: 18px;
   }
 `;
 
-export const StatItem = styled.div`
+export const StatIcon = styled.div<{ $color?: string }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: ${({ $color }) => $color || 'rgba(124, 58, 237, 0.15)'};
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(124, 58, 237, 0.3);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.2);
-  }
-
-  @media ${devices.mobileL} {
-    padding: 16px;
-  }
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 2px;
 `;
 
 export const StatLabel = styled.span`
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: 0.72rem;
+  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
   font-weight: 700;
 `;
 
 export const StatValue = styled.span`
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #7c3aed 100%);
+  background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.5px;
+  line-height: 1;
 
   @media ${devices.mobileL} {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
   }
 `;
